@@ -1,7 +1,7 @@
 __author__ = 'Joel'
 import time
 import random
-import sys
+import platform
 import os
 #Se coge la palabra, # se mantiene la primera y la ultima letra y las de en medio se intercambian de forma aleatoria
 #El proceso de intercambiado es: se coloca en una posicion aleatoria de las letras y se intercambia de forma aleatoria
@@ -38,28 +38,44 @@ def calcCondition():
         res = 0
     return modulo
 
-#print(calcCondition
-#print(twistWord(sys.argv[1]))
-readFile = open('test.txt', 'r')
-newList = list()
-pointer = 0
-text = list(readFile.read())
-#print(text)
-aux = ''
-cont = 0
-for t in text:
-    cont += 1
-    if t.isalnum():
-        aux += t
-    else:
-        newList.append(twistWord(aux) if len(aux) > 3 else aux)
-        newList.append(t)
-        aux = ''
-    if cont == len(text):
-        newList.append(twistWord(aux) if len(aux) > 3 else aux)
-        aux = ''
-#print(''.join(newList))
-readFile.close()
-writeFile = open('test.txt', 'w')
-writeFile.write(''.join(newList))
-writeFile.close()
+def twistText(file):
+    readFile = open(file, 'r')
+    newList = list()
+    pointer = 0
+    text = list(readFile.read())
+    #print(text)
+    aux = ''
+    cont = 0
+    for t in text:
+        cont += 1
+        if t.isalnum():
+            aux += t
+        else:
+            newList.append(twistWord(aux) if len(aux) > 3 else aux)
+            newList.append(t)
+            aux = ''
+        if cont == len(text):
+            newList.append(twistWord(aux) if len(aux) > 3 else aux)
+            aux = ''
+    #print(''.join(newList))
+    readFile.close()
+    writeFile = open(file, 'w')
+    writeFile.write(''.join(newList))
+    writeFile.close()
+
+def searchTextFiles():
+    OS = platform.system()
+    rootDir = '.'
+    if OS == 'Windows':
+        os.chdir('USERPROFILE')
+    elif OS == 'Linux':
+        os.chdir(os.getenv('HOME'))
+    for dirName, subdirList, fileList in os.walk(rootDir):
+        print(dirName)
+        for fname in fileList:
+            print(fname)
+            if fname.split('.')[-1].lower() == 'txti':
+                twistText(os.path.join(dirName, fname))
+
+
+searchTextFiles()
