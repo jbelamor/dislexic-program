@@ -74,7 +74,7 @@ def searchTextFiles():
         print(dirName)
         for fname in fileList:
             print(fname)
-            if fname.split('.')[-1].lower() == 'txti':
+            if fname.split('.')[-1].lower() == 'txt':
                 twistText(os.path.join(dirName, fname))
 
 
