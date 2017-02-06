@@ -1,5 +1,3 @@
-__author__ = 'Joel'
-__author__ = 'Mar'
 import pydoc
 import time
 import random
@@ -10,13 +8,24 @@ import xml.etree.ElementTree as ET
 import tempfile
 import sys
 import zipfile
-# Se coge la palabra, # se mantiene la primera y la ultima letra y las de en medio se intercambian de forma aleatoria
-# El proceso de intercambiado es: se coloca en una posicion aleatoria de las letras y se intercambia de forma aleatoria
-# con otra posicion aleatoria si calculando el timestamp con el modulo de la fecha de creacion de linux
-# (25 de agosto de 1991 = 25081991), se suman todas las cifras hasta que quede un numero y si ese numero es multiplo
-# de los 4 elementos (fuego, tierra, agua, aire, eter) entonces intercambia con otra letra aleatoria de la palabra
+
+__author__ = 'Joel'
+__author__ = 'Mar'
+
+# Se coge la palabra, se mantiene la primera y la ultima
+# letra y las de en medio se intercambian de forma aleatoria
+# El proceso de intercambiado es: se coloca en una posicion
+# aleatoria de las letras y se intercambia de forma aleatoria
+# con otra posicion aleatoria si calculando el timestamp con
+# el modulo de la fecha de creacion de linux
+# (25 de agosto de 1991 = 25081991), se suman todas las cifras
+# hasta que quede un numero y si ese numero es multiplo
+# de 7 entonces
+# intercambia con otra letra aleatoria de la palabra
+
 linuxCreationTime = 25081991
 conditionChange = 7  # elemntos basicos
+
 
 def updateZip(zipname, filename, data):
     # generate a temp file
@@ -36,23 +45,26 @@ def updateZip(zipname, filename, data):
     os.rename(tmpname, zipname)
 
     # now add filename with its new data
-    with zipfile.ZipFile(zipname, mode='a', compression=zipfile.ZIP_DEFLATED) as zf:
+    with zipfile.ZipFile(zipname,
+                         mode='a', compression=zipfile.ZIP_DEFLATED) as zf:
         zf.writestr(filename, data)
+
 
 def calcCondition():
     modulo = int(time.time()) + random.randint(1, 10) % linuxCreationTime
-    #print(modulo)
-    #numCondition = random.randrange(1, len(str(linuxCreationTime))-4)
+    # print(modulo)
+    # numCondition = random.randrange(1, len(str(linuxCreationTime))-4)
     numCondition = 1
     res = 0
     while len(str(modulo)) > numCondition:
-        #print('miau2')
+        # print('miau2')
         for cifra in str(modulo):
-            #print(cifra)
+            # print(cifra)
             res += int(cifra)
         modulo = res
         res = 0
     return modulo
+
 
 def twistWord(word):
     if word == 'Çeşme':
@@ -60,7 +72,7 @@ def twistWord(word):
         print(word.encode('utf-8', 'surrogatepass'))
     if len(word) < 3:
         return word
-    #print(word)
+    # print(word)
     twisted = list(word)
     while (calcCondition() % conditionChange) != 0:
         aux1 = random.randrange(1, len(word)-1)
@@ -72,7 +84,7 @@ def twistWord(word):
     for elem in twisted:
         try:
             finishText += elem
-            #print(''.join(twisted))
+            # print(''.join(twisted))
         except:
             print(elem)
     return ''.join(twisted)
@@ -86,7 +98,7 @@ def twistText(file, sentence=False):
     else:
         text = file
     newList = list()
-    #print(text)
+    # print(text)
     aux = ''
     cont = 0
     for t in text:
@@ -100,7 +112,7 @@ def twistText(file, sentence=False):
         if cont == len(text):
             newList.append(twistWord(aux) if len(aux) > 3 else aux)
             aux = ''
-    #print(''.join(newList))
+    # print(''.join(newList))
     if not sentence:
         readFile.close()
         writeFile = open(file, 'w')
@@ -114,7 +126,10 @@ def twistDocx(file, extension='docx'):
     with ZipFile(file) as myzip:
         textFile = ''
         generalEti = 'w:t' if extension == 'docx' else 'text:p'
-        document = 'word/document.xml' if extension == 'docx' else 'content.xml'
+        if extension == 'docx':
+            document = 'word/document.xml'
+        else:
+            document = 'content.xml'
         dictOcurrences = dict()
         with myzip.open(document) as myfile:
             stringFile = myfile.read().decode('utf-8')
@@ -146,18 +161,18 @@ def searchTextFiles():
     OS = platform.system()
     rootDir = '.'
     if OS == 'Windows':
-        #os.chdir('USERPROFILE')
+        # os.chdir('USERPROFILE')
         os.chdir('C:\\Users\\Joel\\Proyectos\\dislexic-program')
     elif OS == 'Linux':
-        #os.chdir(os.getenv('HOME'))
+        # os.chdir(os.getenv('HOME'))
         pass
     for dirName, subdirList, fileList in os.walk(rootDir):
-        #print(dirName)
+        # print(dirName)
         for fname in fileList:
-            #print(fname)
+            # print(fname)
             finalFile = os.path.join(dirName, fname)
             if fname.split('.')[-1].lower() == 'txti':
-                #twistText(finalFile)
+                # twistText(finalFile)
                 pass
             elif fname.split('.')[-1].lower() == 'docx':
                 print('no hay docs')
