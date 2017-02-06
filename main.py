@@ -1,5 +1,6 @@
 __author__ = 'Joel'
 __author__ = 'Mar'
+import pydoc
 import time
 import random
 import platform
@@ -7,6 +8,7 @@ import os
 from zipfile import ZipFile
 import xml.etree.ElementTree as ET
 import tempfile
+import sys
 import zipfile
 # Se coge la palabra, # se mantiene la primera y la ultima letra y las de en medio se intercambian de forma aleatoria
 # El proceso de intercambiado es: se coloca en una posicion aleatoria de las letras y se intercambia de forma aleatoria
@@ -108,34 +110,36 @@ def twistText(file, sentence=False):
         return ''.join(newList)
 
 
-def twistDocx(file):
+def twistDocx(file, extension='docx'):
     with ZipFile(file) as myzip:
         textFile = ''
+        generalEti = 'w:t' if extension == 'docx' else 'text:p'
+        document = 'word/document.xml' if extension == 'docx' else 'content.xml'
         dictOcurrences = dict()
-        with myzip.open('word/document.xml') as myfile:
+        with myzip.open(document) as myfile:
             stringFile = myfile.read().decode('utf-8')
             root = ET.fromstring(stringFile)
-            #print(root[0].tag)
             for p in root[0]:
                 for r in p:
                     for t in r:
+                        print(t.tag)
                         if t.tag == '{http://schemas.openxmlformats.org/wordprocessingml/2006/main}t':
                             etiq = ''
                             if len(t.attrib) != 0:
                                 for key in t.attrib.keys():
-                                    etiq = '<w:t>' if (len(t.attrib)==0) else '<w:t xml:' + key.split('}')[1] + '="' + t.attrib[key] + '">'
-                            dictOcurrences[etiq + t.text + '</w:t>'] = etiq + twistText(t.text, True) + '</w:t>'
+                                    etiq = '<' + generalEti + '>' if (len(t.attrib) == 0) else '<' + generalEti + ' xml:' + key.split('}')[1] + '="' + t.attrib[key] + '">'
+                            dictOcurrences[etiq + t.text + '</' + generalEti + '>'] = etiq + twistText(t.text, True) + '</' + generalEti + '>'
             myfile.close()
-        with myzip.open('word/document.xml') as fileInRaw:
+        with myzip.open(document) as fileInRaw:
             textFile = fileInRaw.read().decode('utf-8')
             for key in dictOcurrences.keys():
-                #print(key)
-                #print(dictOcurrences[key])
+                print(key)
+                print(dictOcurrences[key])
                 textFile = textFile.replace(key, dictOcurrences[key])
-            #print(textFile)
+            print(textFile)
             fileInRaw.close()
         myzip.close()
-        updateZip(file, 'word/document.xml', textFile)
+        updateZip(file, document, textFile)
 
 
 def searchTextFiles():
@@ -145,7 +149,8 @@ def searchTextFiles():
         #os.chdir('USERPROFILE')
         os.chdir('C:\\Users\\Joel\\Proyectos\\dislexic-program')
     elif OS == 'Linux':
-        os.chdir(os.getenv('HOME'))
+        #os.chdir(os.getenv('HOME'))
+        pass
     for dirName, subdirList, fileList in os.walk(rootDir):
         #print(dirName)
         for fname in fileList:
@@ -155,9 +160,19 @@ def searchTextFiles():
                 #twistText(finalFile)
                 pass
             elif fname.split('.')[-1].lower() == 'docx':
+                print('no hay docs')
                 print(finalFile)
                 twistDocx(finalFile)
+            elif fname.split('.')[-1].lower() == 'odt':
+                print(finalFile)
+                twistDocx(finalFile, 'odt')
 
-
+# for arg in sys.argv:
+#     if arg == '-h' or '--help':
+#         print('Usage {}')
+#     elif arg == '--sorrynotsorry' or '-sns':
+#         print('')
+#     elif arg == '-home':
+#         pass
 
 searchTextFiles()
