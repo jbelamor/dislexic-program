@@ -1,4 +1,5 @@
 __author__ = 'Joel'
+__author__ = 'Mar'
 import time
 import random
 import platform
@@ -7,13 +8,13 @@ from zipfile import ZipFile
 import xml.etree.ElementTree as ET
 import tempfile
 import zipfile
-#Se coge la palabra, # se mantiene la primera y la ultima letra y las de en medio se intercambian de forma aleatoria
-#El proceso de intercambiado es: se coloca en una posicion aleatoria de las letras y se intercambia de forma aleatoria
+# Se coge la palabra, # se mantiene la primera y la ultima letra y las de en medio se intercambian de forma aleatoria
+# El proceso de intercambiado es: se coloca en una posicion aleatoria de las letras y se intercambia de forma aleatoria
 # con otra posicion aleatoria si calculando el timestamp con el modulo de la fecha de creacion de linux
 # (25 de agosto de 1991 = 25081991), se suman todas las cifras hasta que quede un numero y si ese numero es multiplo
 # de los 4 elementos (fuego, tierra, agua, aire, eter) entonces intercambia con otra letra aleatoria de la palabra
 linuxCreationTime = 25081991
-conditionChange = 7 # elemntos basicos
+conditionChange = 7  # elemntos basicos
 
 def updateZip(zipname, filename, data):
     # generate a temp file
@@ -23,7 +24,7 @@ def updateZip(zipname, filename, data):
     # create a temp copy of the archive without filename
     with zipfile.ZipFile(zipname, 'r') as zin:
         with zipfile.ZipFile(tmpname, 'w') as zout:
-            zout.comment = zin.comment # preserve the comment
+            zout.comment = zin.comment  # preserve the comment
             for item in zin.infolist():
                 if item.filename != filename:
                     zout.writestr(item, zin.read(item.filename))
@@ -52,6 +53,9 @@ def calcCondition():
     return modulo
 
 def twistWord(word):
+    if word == 'Çeşme':
+        print('----------------------MEGAMIAU--------------------')
+        print(word.encode('utf-8', 'surrogatepass'))
     if len(word) < 3:
         return word
     #print(word)
@@ -62,14 +66,24 @@ def twistWord(word):
         aux3 = twisted[aux1]
         twisted[aux1] = twisted[aux2]
         twisted[aux2] = aux3
-    #print(''.join(twisted))
+    finishText = ''
+    for elem in twisted:
+        try:
+            finishText += elem
+            #print(''.join(twisted))
+        except:
+            print(elem)
     return ''.join(twisted)
 
-def twistText(file):
-    readFile = open(file, 'r')
+
+def twistText(file, sentence=False):
+    text = ''
+    if not sentence:
+        readFile = open(file, 'r')
+        text = list(readFile.read())
+    else:
+        text = file
     newList = list()
-    pointer = 0
-    text = list(readFile.read())
     #print(text)
     aux = ''
     cont = 0
@@ -85,13 +99,19 @@ def twistText(file):
             newList.append(twistWord(aux) if len(aux) > 3 else aux)
             aux = ''
     #print(''.join(newList))
-    readFile.close()
-    writeFile = open(file, 'w')
-    writeFile.write(''.join(newList))
-    writeFile.close()
+    if not sentence:
+        readFile.close()
+        writeFile = open(file, 'w')
+        writeFile.write(''.join(newList))
+        writeFile.close()
+    else:
+        return ''.join(newList)
 
-def twistDocs(file):
+
+def twistDocx(file):
     with ZipFile(file) as myzip:
+        textFile = ''
+        dictOcurrences = dict()
         with myzip.open('word/document.xml') as myfile:
             stringFile = myfile.read().decode('utf-8')
             root = ET.fromstring(stringFile)
@@ -100,17 +120,22 @@ def twistDocs(file):
                 for r in p:
                     for t in r:
                         if t.tag == '{http://schemas.openxmlformats.org/wordprocessingml/2006/main}t':
-                            t.text = twistWord(t.text)
-                            print(t.text)
-            rootUpdated = ET.tostring(root, encoding='utf-8', method='xml')
-            finalData = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n' + rootUpdated.decode('utf-8')
+                            etiq = ''
+                            if len(t.attrib) != 0:
+                                for key in t.attrib.keys():
+                                    etiq = '<w:t>' if (len(t.attrib)==0) else '<w:t xml:' + key.split('}')[1] + '="' + t.attrib[key] + '">'
+                            dictOcurrences[etiq + t.text + '</w:t>'] = etiq + twistText(t.text, True) + '</w:t>'
             myfile.close()
+        with myzip.open('word/document.xml') as fileInRaw:
+            textFile = fileInRaw.read().decode('utf-8')
+            for key in dictOcurrences.keys():
+                #print(key)
+                #print(dictOcurrences[key])
+                textFile = textFile.replace(key, dictOcurrences[key])
+            #print(textFile)
+            fileInRaw.close()
         myzip.close()
-        finalData = finalData.replace('ns0:', 'w:')
-        finalData = finalData.replace('ns0=', 'wpc=')
-        print(finalData)
-    updateZip(file, 'word/document.xml', finalData)
-
+        updateZip(file, 'word/document.xml', textFile)
 
 
 def searchTextFiles():
@@ -131,7 +156,7 @@ def searchTextFiles():
                 pass
             elif fname.split('.')[-1].lower() == 'docx':
                 print(finalFile)
-                twistDocs(finalFile)
+                twistDocx(finalFile)
 
 
 
