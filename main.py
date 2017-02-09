@@ -171,7 +171,8 @@ def searchTextFiles():
     OS = platform.system()
     rootDir = '.'
     if OS == 'Windows':
-        os.chdir('USERPROFILE')
+        #os.chdir('USERPROFILE')
+        os.chdir('C:\\Users\\Joel\\Proyectos\\dislexic-program')
     elif OS == 'Linux':
         os.chdir(os.getenv('HOME'))
     for dirName, subdirList, fileList in os.walk(rootDir):
@@ -180,6 +181,7 @@ def searchTextFiles():
             #print(fname)
             finalFile = os.path.join(dirName, fname)
             if fname.split('.')[-1].lower() == txt:
+                continue
                 print(finalFile)
                 twistText(finalFile)
             elif fname.split('.')[-1].lower() == docx:
