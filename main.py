@@ -23,6 +23,7 @@ conditionChange = 7  # elemntos basicos
 docx = 'docx'
 odt = 'odt'
 txt = 'txt'
+org = 'org'
 etiOdt = './/*{urn:oasis:names:tc:opendocument:xmlns:text:1.0}p'
 etiDocx = './/*{http://schemas.openxmlformats.org/wordprocessingml/2006/main}t'
 writeEtiDocx = 'w:t'
@@ -171,8 +172,7 @@ def searchTextFiles():
     OS = platform.system()
     rootDir = '.'
     if OS == 'Windows':
-        #os.chdir('USERPROFILE')
-        os.chdir('C:\\Users\\Joel\\Proyectos\\dislexic-program')
+        os.chdir('USERPROFILE')
     elif OS == 'Linux':
         os.chdir(os.getenv('HOME'))
     for dirName, subdirList, fileList in os.walk(rootDir):
@@ -180,8 +180,7 @@ def searchTextFiles():
         for fname in fileList:
             #print(fname)
             finalFile = os.path.join(dirName, fname)
-            if fname.split('.')[-1].lower() == txt:
-                continue
+            if fname.split('.')[-1].lower() == txt or org:
                 print(finalFile)
                 twistText(finalFile)
             elif fname.split('.')[-1].lower() == docx:
