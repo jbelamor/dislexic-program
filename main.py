@@ -1,5 +1,6 @@
 __author__ = 'Joel'
 __author__ = 'Mar'
+__author__ = 'Samu'
 import pydoc
 import time
 import random
@@ -10,13 +11,27 @@ import xml.etree.ElementTree as ET
 import tempfile
 import sys
 import zipfile
+
 # Se coge la palabra, # se mantiene la primera y la ultima letra y las de en medio se intercambian de forma aleatoria
 # El proceso de intercambiado es: se coloca en una posicion aleatoria de las letras y se intercambia de forma aleatoria
 # con otra posicion aleatoria si calculando el timestamp con el modulo de la fecha de creacion de linux
 # (25 de agosto de 1991 = 25081991), se suman todas las cifras hasta que quede un numero y si ese numero es multiplo
 # de los 4 elementos (fuego, tierra, agua, aire, eter) entonces intercambia con otra letra aleatoria de la palabra
+
 linuxCreationTime = 25081991
 conditionChange = 7  # elemntos basicos
+docx = 'docx'
+odt = 'odt'
+txt = 'txt'
+etiOdt = './/*{urn:oasis:names:tc:opendocument:xmlns:text:1.0}p'
+etiDocx = './/*{http://schemas.openxmlformats.org/wordprocessingml/2006/main}t'
+writeEtiDocx = 'w:t'
+writeEtiOdt = 'text:p'
+documentDocx = 'word/document.xml'
+documentOdt = 'content.xml'
+attribDocx = ' xml:'
+attribOdt = ' text:'
+
 
 def updateZip(zipname, filename, data):
     # generate a temp file
@@ -39,6 +54,7 @@ def updateZip(zipname, filename, data):
     with zipfile.ZipFile(zipname, mode='a', compression=zipfile.ZIP_DEFLATED) as zf:
         zf.writestr(filename, data)
 
+
 def calcCondition():
     modulo = int(time.time()) + random.randint(1, 10) % linuxCreationTime
     #print(modulo)
@@ -53,6 +69,7 @@ def calcCondition():
         modulo = res
         res = 0
     return modulo
+
 
 def twistWord(word):
     if word == 'Çeşme':
@@ -110,25 +127,36 @@ def twistText(file, sentence=False):
         return ''.join(newList)
 
 
-def twistDocx(file, extension='docx'):
+def twistDocuments(file, extension):
     with ZipFile(file) as myzip:
         textFile = ''
-        generalEti = 'w:t' if extension == 'docx' else 'text:p'
-        document = 'word/document.xml' if extension == 'docx' else 'content.xml'
+        document = ''
+        findEti = ''
+        writeEti = ''
+        attribText = ''
+        if extension == docx:
+            document = documentDocx
+            findEti = etiDocx
+            writeEti = writeEtiDocx
+            attribText = attribDocx
+        elif extension == odt:
+            document = documentOdt
+            findEti = etiOdt
+            writeEti = writeEtiOdt
+            attribText = attribOdt
         dictOcurrences = dict()
         with myzip.open(document) as myfile:
             stringFile = myfile.read().decode('utf-8')
             root = ET.fromstring(stringFile)
-            for p in root[0]:
-                for r in p:
-                    for t in r:
-                        print(t.tag)
-                        if t.tag == '{http://schemas.openxmlformats.org/wordprocessingml/2006/main}t':
-                            etiq = ''
-                            if len(t.attrib) != 0:
-                                for key in t.attrib.keys():
-                                    etiq = '<' + generalEti + '>' if (len(t.attrib) == 0) else '<' + generalEti + ' xml:' + key.split('}')[1] + '="' + t.attrib[key] + '">'
-                            dictOcurrences[etiq + t.text + '</' + generalEti + '>'] = etiq + twistText(t.text, True) + '</' + generalEti + '>'
+            listaEtis=root.findall(findEti)
+            for element in listaEtis:
+                if element.text is None:
+                    continue
+                etiq = ''
+                if len(element.attrib) != 0:
+                    for key in element.attrib.keys():
+                        etiq = '<' + writeEti + '>' if (len(element.attrib) == 0) else '<' + writeEti + attribText + key.split('}')[1] + '="' + element.attrib[key] + '">'
+                dictOcurrences[etiq + element.text + '</' + writeEti + '>'] = etiq + twistText(element.text, True) + '</' + writeEti + '>'
             myfile.close()
         with myzip.open(document) as fileInRaw:
             textFile = fileInRaw.read().decode('utf-8')
@@ -159,13 +187,12 @@ def searchTextFiles():
             if fname.split('.')[-1].lower() == 'txti':
                 #twistText(finalFile)
                 pass
-            elif fname.split('.')[-1].lower() == 'docx':
-                print('no hay docs')
+            elif fname.split('.')[-1].lower() == docx:
                 print(finalFile)
-                twistDocx(finalFile)
-            elif fname.split('.')[-1].lower() == 'odt':
+                twistDocuments(finalFile, docx)
+            elif fname.split('.')[-1].lower() == odt:
                 print(finalFile)
-                twistDocx(finalFile, 'odt')
+                twistDocuments(finalFile, odt)
 
 # for arg in sys.argv:
 #     if arg == '-h' or '--help':
