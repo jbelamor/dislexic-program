@@ -11,6 +11,7 @@ import xml.etree.ElementTree as ET
 import tempfile
 import sys
 import zipfile
+from shutil import copyfile
 
 # Se coge la palabra, # se mantiene la primera y la ultima letra y las de en medio se intercambian de forma aleatoria
 # El proceso de intercambiado es: se coloca en una posicion aleatoria de las letras y se intercambia de forma aleatoria
@@ -32,7 +33,11 @@ documentDocx = 'word/document.xml'
 documentOdt = 'content.xml'
 attribDocx = ' xml:'
 attribOdt = ' text:'
+backupFolder = os.getenv('HOME')+'/.magic'
+doBackup = False if '--no-bakup' in sys.argv else True
 
+def copyFile(fileDir):
+    copyfile(fileDir, backupFolder+'/'+fileDir)
 
 def updateZip(zipname, filename, data):
     # generate a temp file
@@ -170,24 +175,36 @@ def twistDocuments(file, extension):
 
 def searchTextFiles():
     OS = platform.system()
-    rootDir = '.'
+    #rootDir = '.'
+    rootDir = './pruebas'
     if OS == 'Windows':
-        os.chdir('USERPROFILE')
+        pass
+        #os.chdir('USERPROFILE')
     elif OS == 'Linux':
-        os.chdir(os.getenv('HOME'))
+        pass
+        #os.chdir(os.getenv('HOME'))
     for dirName, subdirList, fileList in os.walk(rootDir):
         #print(dirName)
+        #print(fileList)
         for fname in fileList:
-            #print(fname)
+            print(fname)
             finalFile = os.path.join(dirName, fname)
             if fname.split('.')[-1].lower() == txt or org:
                 print(finalFile)
+                if doBackup:
+                    copyFile(finalFile)
                 twistText(finalFile)
             elif fname.split('.')[-1].lower() == docx:
                 print(finalFile)
+                if doBackup:
+                    copyFile(finalFile)
                 twistDocuments(finalFile, docx)
             elif fname.split('.')[-1].lower() == odt:
                 print(finalFile)
+                if doBackup:
+                    copyFile(finalFile)
                 twistDocuments(finalFile, odt)
 
+if not os.path.exists(backupFolder):
+    os.mkdir(backupFolder)
 searchTextFiles()
